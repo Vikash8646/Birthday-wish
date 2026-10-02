@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Uyên Nhi</title>
+    <link rel="stylesheet" href="main.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div id="drag-container">
+        <div id="spin-container">
+            <img src="./images/604131181_18251168422290746_1360011991400831and 704_n.jpg" alt="Birthday memory 1">
+            <img src="./images/605773218_18251267956290746_621466897654211639_n.jpg" alt="Birthday memory 2">
+            <img src="./images/607042567_18251267971290746_4194294227420584204_n.jpg" alt="Birthday memory 3">
+            <img src="./images/656864788_18261620512290746_4715183681001230746_n.jpg" alt="Birthday memory 4">
+            <img src="./images/770739245_18278276662290746_1840105942484984081_n.jpg" alt="Birthday memory 5">
+            <img src="./images/771309634_18278276593290746_2931515525584927817_n.jpg" alt="Birthday memory 6">
+            <img src="./images/772677396_18278276635290746_3209318285662163530_n.jpg" alt="Birthday memory 7">
+            <video src="./images/AQMfZPTX0Ef-y2QKCNAL3z2sKyKksMBPNDttLhPNb0dM50-A5v1ILaeZ7CEd7QxAclEczpcQW5svRS4fV3b7AbdFCmdy3eObXg0WgxU.mp4" autoplay muted loop playsinline></video>
+            <p>Happy Birthday Bhabhiji</p>
+        </div>
+        <div id="ground"></div>
+    </div>
+    
+    <div id="music-container"></div>
+    <audio id="birthday-audio" autoplay loop playsinline>
+        <source src="./music/Dooriyan%20Love%20Aaj%20Kal%20128%20Kbps.mp3" type="audio/mpeg">
+    </audio>
+    <button id="music-toggle" type="button">Play music</button>
+    <div id="canva">
+        <canvas id="canvas"></canvas>
+    </div>
+    <canvas id="effects-canvas" aria-hidden="true"></canvas>
+
+    <script src="main.js"></script>
+
+    <script>
+        window.onload = function() {
+            const audio = document.getElementById("birthday-audio");
+            const musicToggle = document.getElementById("music-toggle");
+
+            audio.play().then(function() {
+                musicToggle.textContent = "Pause music";
+            }).catch(function() {
+                musicToggle.textContent = "Tap to play music";
+            });
+
+            musicToggle.addEventListener("pointerdown", function(event) {
+                event.stopPropagation();
+            });
+            musicToggle.addEventListener("click", function() {
+                if (audio.paused) {
+                    audio.play().then(function() {
+                        musicToggle.textContent = "Pause music";
+                    }).catch(function(error) {
+                        musicToggle.textContent = "Could not play music";
+                        console.error("Audio playback failed:", error);
+                    });
+                } else {
+                    audio.pause();
+                    musicToggle.textContent = "Play music";
+                }
+            });
+
+            // Hiệu ứng pháo hoa và trái tim
+            const effectsCanvas = document.getElementById("effects-canvas");
+            const ctx = effectsCanvas.getContext("2d");
+
+            function resizeEffectsCanvas() {
+                effectsCanvas.width = window.innerWidth;
+                effectsCanvas.height = window.innerHeight;
+            }
+
+            resizeEffectsCanvas();
+            window.addEventListener("resize", resizeEffectsCanvas);
+
+            function random(min, max) {
+                return Math.random() * (max - min) + min;
+            }
+
+            function Firework(x, y) {
+                this.x = x;
+                this.y = y;
+                this.radius = random(2, 4);
+                this.color = `hsl(${random(0, 360)}, 100%, 50%)`;
+                this.vx = random(-3, 3);
+                this.vy = random(-3, 3);
+                this.life = 100;
+            }
+
+            Firework.prototype.draw = function () {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fillStyle = this.color;
+                ctx.fill();
+            };
+
+            Firework.prototype.update = function () {
+                this.x += this.vx;
+                this.y += this.vy;
+                this.life--;
+            };
+
+            function Heart(x, y) {
+                this.x = x;
+                this.y = y;
+                this.size = random(20, 40);
+                this.color = 'red';
+                this.vy = random(-2, -1);
+                this.opacity = 1;
+            }
+
+            Heart.prototype.draw = function () {
+                ctx.beginPath();
+                ctx.moveTo(this.x, this.y);
+                ctx.bezierCurveTo(this.x - this.size / 2, this.y - this.size / 2, this.x - this.size, this.y + this.size / 3, this.x, this.y + this.size);
+                ctx.bezierCurveTo(this.x + this.size, this.y + this.size / 3, this.x + this.size / 2, this.y - this.size / 2, this.x, this.y);
+                ctx.fillStyle = this.color;
+                ctx.globalAlpha = this.opacity;
+                ctx.fill();
+                ctx.globalAlpha = 1;
+            };
+
+            Heart.prototype.update = function () {
+                this.y += this.vy;
+                this.opacity -= 0.01;
+            };
+
+            let fireworks = [];
+            let hearts = [];
+
+            function animate() {
+                ctx.clearRect(0, 0, effectsCanvas.width, effectsCanvas.height);
+                if (Math.random() < 0.1) {
+                    fireworks.push(new Firework(random(0, effectsCanvas.width), random(0, effectsCanvas.height)));
+                }
+                if (Math.random() < 0.05) {
+                    hearts.push(new Heart(random(0, effectsCanvas.width), effectsCanvas.height));
+                }
+
+                fireworks.forEach((firework, index) => {
+                    firework.draw();
+                    firework.update();
+                    if (firework.life <= 0) {
+                        fireworks.splice(index, 1);
+                    }
+                });
+
+                hearts.forEach((heart, index) => {
+                    heart.draw();
+                    heart.update();
+                    if (heart.opacity <= 0) {
+                        hearts.splice(index, 1);
+                    }
+                });
+
+                requestAnimationFrame(animate);
+            }
+            animate();
+        };
+    </script>
+</body>
+</html>
